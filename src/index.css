@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Primary button: gradient shimmer on hover */
+  .btn-shimmer {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #4f46e5 100%);
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out, background-position 400ms ease, opacity 150ms ease-out;
+  }
+
+  .btn-shimmer:hover:not(:disabled) {
+    background-position: 100% 50%;
+    transform: scale(1.03);
+  }
+
+  /* Non-primary buttons: scale only */
+  .btn-scale {
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, opacity 150ms ease-out;
+  }
+
+  .btn-scale:hover:not(:disabled) {
+    transform: scale(1.03);
+  }
+
+  /* Cards: accent border glow on hover */
+  .card-glow {
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+  }
+
+  .card-glow:hover {
+    border-color: transparent;
+    box-shadow: 0 0 0 1px #6366f1, 0 0 16px rgba(99, 102, 241, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer {
+    background: #6366f1;
+    transition: opacity 150ms ease-out;
+  }
+
+  .btn-shimmer:hover:not(:disabled) {
+    transform: none;
+    background-position: 0% 50%;
+  }
+
+  .btn-scale {
+    transition: background-color 150ms ease-out, color 150ms ease-out, opacity 150ms ease-out;
+  }
+
+  .btn-scale:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .card-glow {
+    transition: none;
+  }
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #09090b;
+    color: #fafafa;
+    margin: 0;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #18181b;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
+  }
+}
