@@ -20,12 +20,20 @@ export function useAnalysis(): UseAnalysisReturn {
     setLoading(true)
     setError(null)
     try {
-      const { data, error: fetchError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('[fetchAnalyses] user:', user?.id ?? 'null (anônimo)')
+
+      const query = supabase
         .from('analyses')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10)
 
+      if (user) query.eq('user_id', user.id)
+
+      const { data, error: fetchError } = await query
+
+      console.log('[fetchAnalyses] resultado:', { count: data?.length ?? 0, error: fetchError?.message })
       if (fetchError) throw fetchError
       setAnalyses(data ?? [])
     } catch (err) {
@@ -41,6 +49,7 @@ export function useAnalysis(): UseAnalysisReturn {
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('[runAnalysis] session user_id:', session?.user?.id ?? 'null (anônimo)')
 
       // For authenticated users, explicitly pass the JWT so the Edge Function
       // can identify the user. For anonymous users, omit the header and let the
@@ -58,6 +67,10 @@ export function useAnalysis(): UseAnalysisReturn {
         ...(invokeHeaders && { headers: invokeHeaders }),
       })
 
+      console.log('[runAnalysis] Edge Function response:', {
+        error: response.error?.message,
+        user_id: response.data?.analysis?.user_id ?? 'null',
+      })
       if (response.error) throw new Error(response.error.message)
 
       const savedAnalysis = response.data?.analysis ?? null
