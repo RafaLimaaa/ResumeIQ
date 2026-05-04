@@ -42,14 +42,20 @@ export function useAnalysis(): UseAnalysisReturn {
     try {
       const { data: { session } } = await supabase.auth.getSession()
 
+      // For authenticated users, explicitly pass the JWT so the Edge Function
+      // can identify the user. For anonymous users, omit the header and let the
+      // Supabase SDK handle auth internally — passing the raw sb_publishable_*
+      // key manually as Bearer causes 401 because it is not a JWT.
+      const invokeHeaders = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined
+
       const response = await supabase.functions.invoke<{
         analysis: Analysis
         result: AnalysisRawResult
       }>('analyze-resume', {
         body: request,
-        headers: session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
+        ...(invokeHeaders && { headers: invokeHeaders }),
       })
 
       if (response.error) throw new Error(response.error.message)
