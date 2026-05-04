@@ -1,111 +1,60 @@
 # ResumeIQ
 
-Análise de compatibilidade entre currículo e vaga de emprego com Google Gemini. Ferramenta SaaS construída para portfólio profissional.
+Ferramenta que analisa a compatibilidade entre um currículo e uma vaga usando Google Gemini. Projeto finalizado e em produção.
+
+**Demo:** https://resume-iq-beryl.vercel.app  
+**Repositório:** https://github.com/RafaLimaaa/ResumeIQ
+
+## O que faz
+
+Você cola a descrição da vaga e faz upload do currículo em PDF. A aplicação extrai o texto, manda para o Gemini via Edge Function e retorna um score de compatibilidade com breakdown por dimensão (experiência, habilidades, educação, palavras-chave), pontos fortes, lacunas e sugestões.
+
+Usuários sem login têm 3 análises gratuitas (controladas por localStorage). Com login via Google, as análises são ilimitadas e ficam salvas no histórico.
 
 ## Stack
 
-- **Frontend**: React 18, Vite, TypeScript (strict), Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)
-- **IA**: Google Gemini 1.5 Flash via Edge Function
-- **Auth**: Google OAuth via Supabase
-- **Formulários**: React Hook Form + Zod
-- **PDF**: pdfjs-dist (extração) + jsPDF + html2canvas (export)
-- **Testes**: Vitest + React Testing Library
+- React 18 + Vite + TypeScript
+- Tailwind CSS
+- Supabase — Auth, PostgreSQL, Edge Functions
+- Google OAuth via Supabase
+- Google Gemini (chamado exclusivamente pela Edge Function)
+- pdfjs-dist para extração de PDF no browser
+- jsPDF + html2canvas para export
 
-## Funcionalidades
-
-- Análise de compatibilidade currículo × vaga em segundos
-- Score geral com gauge SVG animado
-- 4 dimensões: experiência, habilidades, educação, palavras-chave
-- Pontos fortes, lacunas e sugestões acionáveis
-- 3 análises gratuitas sem login (localStorage)
-- Login com Google para análises ilimitadas
-- Histórico das últimas 10 análises (usuários autenticados)
-- Export da análise em PDF
-
-## Configuração
-
-### 1. Variáveis de ambiente
-
-```bash
-cp .env.example .env.local
-```
-
-Edite `.env.local` com suas credenciais:
-
-```
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=sua_anon_key_aqui
-```
-
-### 2. Banco de dados
-
-```bash
-supabase db push
-```
-
-Ou aplique manualmente o arquivo `supabase/migrations/20240101000000_initial_schema.sql` no SQL Editor do Supabase.
-
-### 3. Edge Function
-
-Configure os secrets no painel Supabase ou via CLI:
-
-```bash
-supabase secrets set GEMINI_API_KEY=sua_chave_gemini
-```
-
-Deploy da função:
-
-```bash
-supabase functions deploy analyze-resume
-```
-
-### 4. Google OAuth
-
-No painel Supabase → Authentication → Providers → Google:
-- Habilite o provider
-- Configure Client ID e Client Secret do Google Cloud Console
-- Adicione `https://<project-ref>.supabase.co/auth/v1/callback` como Authorized redirect URI
-
-## Desenvolvimento
+## Rodando localmente
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Testes
+## Variáveis de ambiente
+
+Crie um arquivo `.env.local` na raiz:
+
+```
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=sua_anon_key
+```
+
+A `GEMINI_API_KEY` fica nos secrets da Edge Function, nunca no frontend:
 
 ```bash
-npm run test:run    # Uma execução
-npm run test        # Modo watch
+npx supabase secrets set GEMINI_API_KEY=sua_chave --project-ref <project-ref>
 ```
 
-## Build
+## Banco de dados e Edge Function
+
+Aplique as migrations:
 
 ```bash
-npm run build
+npx supabase db push
 ```
 
-## Arquitetura
+Deploy da Edge Function:
 
-```
-Frontend (React + Vite)
-    │
-    ├── Extração PDF no browser (pdfjs-dist)
-    ├── Controle de limite anônimo (localStorage)
-    └── Chamada à Edge Function
-            │
-            └── Supabase Edge Function (analyze-resume)
-                    ├── Verificação JWT (autenticação opcional)
-                    ├── Chamada à Gemini API
-                    ├── Parse e validação do JSON
-                    └── Persistência em PostgreSQL (RLS)
+```bash
+npx supabase functions deploy analyze-resume --no-verify-jwt --project-ref <project-ref>
 ```
 
-## Segurança
-
-- Gemini API chamada exclusivamente pela Edge Function (nunca exposta no frontend)
-- RLS habilitado em todas as tabelas
-- `VITE_SUPABASE_ANON_KEY` é pública por design — nunca misturar com `service_role key`
-- Dados de currículo não são armazenados — apenas o resultado da análise
+O `--no-verify-jwt` é intencional — a função gerencia autenticação internamente, identificando o usuário quando há JWT e permitindo anônimos quando não há.
